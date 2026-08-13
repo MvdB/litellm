@@ -1,3 +1,36 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Repo overview
+
+LiteLLM is an OpenAI-format Python SDK and AI Gateway for 100+ LLM providers. Two layers: the SDK (`litellm/`) does the actual provider calls and format translation; the AI Gateway (`litellm/proxy/`) wraps the SDK with auth, budgets, rate limiting, spend tracking, and routing. Read `ARCHITECTURE.md` before making cross-cutting changes; it has the full request-flow diagrams (proxy -> router -> SDK -> provider), the cost-attribution pipeline, background jobs, and the repository/data-access conventions
+
+Sibling packages in this monorepo: `enterprise/` (the `litellm-enterprise` package, license-gated features checked by `litellm/proxy/auth/litellm_license.py`), `litellm-proxy-extras/` (Prisma migration toolchain), and `ui/litellm-dashboard/` (Next.js Admin UI with its own scoped CLAUDE.md). `tests/e2e/` also has its own CLAUDE.md whose harness conventions are mandatory for e2e work
+
+## Commands
+
+Python is 3.10+ managed with uv; run tools via `uv run --no-sync <cmd>`. `make bootstrap` provisions a fresh clone or worktree (deps + Prisma client + dashboard npm install). `make help` lists everything
+
+- Lint, CI-parity: `make lint` (ruff, format check, budget gates, basedpyright, circular imports, import safety). Faster changed-only loop: `make lint-dev`. Format: `make format`
+- Unit tests: `make test-unit` (runs `tests/test_litellm`, mocked, no API keys needed). CI matrix slices exist per area, e.g. `make test-unit-llms`, `make test-unit-proxy-core`; see `make help`
+- Single test: `uv run --no-sync pytest tests/test_litellm/path/to/test_file.py::test_name -x -vv`
+- Provider translation tests: `make test-llm-translation-single FILE=test_anthropic.py`
+- e2e type gate: `make lint-e2e-basedpyright` (zero errors allowed in `tests/e2e`)
+- Run the proxy locally: `python litellm/proxy/proxy_cli.py --config litellm/proxy/dev_config.yaml --detailed_debug --reload --use_v2_migration_resolver` (port 4000). Admin UI dev server: `npm run dev` in `ui/litellm-dashboard` (port 3000)
+- Dashboard: `npm run lint`, `npm test`, `npm run gen:api` (regenerates `src/lib/http/schema.d.ts` from the proxy OpenAPI spec after backend route/model changes; CI enforces sync)
+
+## Architecture essentials
+
+- SDK entry points are `completion()` / `acompletion()` / `embedding()` in `litellm/main.py`. `get_llm_provider()` (logic in `litellm/litellm_core_utils/get_llm_provider_logic.py`) resolves a `provider/model` string to the provider
+- Provider integrations live in `litellm/llms/{provider}/` and follow the transformation pattern: a `Config` class subclassing `BaseConfig` (`litellm/llms/base_llm/chat/transformation.py`, one base subdir per capability) implements `transform_request()` (OpenAI format -> provider format) and `transform_response()` (provider -> `ModelResponse`). `BaseLLMHTTPHandler` (`litellm/llms/custom_httpx/llm_http_handler.py`) orchestrates the HTTP call and invokes those methods, so adding a provider or feature means writing a transformation config, not touching the handler
+- `litellm/router.py` (`Router`) adds load balancing, fallbacks, retries, and cooldowns over multiple deployments sharing a `model_name`; strategies are in `litellm/router_strategy/`. The proxy always goes through the Router
+- The proxy is a FastAPI app in `litellm/proxy/proxy_server.py`. Auth enters at `proxy/auth/user_api_key_auth.py`; proxy-level hooks are `CustomLogger` subclasses registered in `PROXY_HOOKS` (`proxy/hooks/`); guardrails in `proxy/guardrails/`; per-API-surface endpoint dirs (e.g. `proxy/anthropic_endpoints/` for `/v1/messages`) plus generic passthrough in `proxy/pass_through_endpoints/`
+- Persistence: Prisma over PostgreSQL (root `schema.prisma`), Redis for rate limits/caching/spend queueing. Canonical entity models live in `litellm/models/`, data access in `litellm/repositories/` (`BaseRepository[T]` plus entity repos); `proxy/_types.py` re-exports for backwards compat
+- Observability/logging callbacks are `CustomLogger` subclasses in `litellm/integrations/`, driven asynchronously by the `Logging` object in `litellm_core_utils/litellm_logging.py`. Cost comes from `cost_calculator.py`, fed by `model_prices_and_context_window.json` (the canonical model/pricing/feature registry; also the source of truth for what the latest models are)
+- Types are centralized in `litellm/types/`, mirroring the module layout (`types/llms/`, `types/router.py`, `types/utils.py` with `ModelResponse`/`Usage`, ...)
+- Proxy YAML config: `model_list` entries pair a public `model_name` alias with `litellm_params` (`model: provider/model`, `api_key: os.environ/NAME` resolves secrets from env). Duplicate `model_name` entries load-balance via the Router. `litellm/proxy/dev_config.yaml` is the dev example; `proxy_server_config.yaml` is a fuller reference
+
 Do not write comments unless they are any of:
 - absolutely necessary to explain some very complex business logic (in which case, keep it concise and clear)
 - used as an input for tools to read and act on. For example:
