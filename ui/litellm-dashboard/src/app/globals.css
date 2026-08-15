@@ -100,6 +100,49 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
+.high-contrast {
+  --foreground: oklch(0 0 0);
+  --card-foreground: oklch(0 0 0);
+  --popover-foreground: oklch(0 0 0);
+  --primary: oklch(0.15 0.05 264.665);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.94 0.003 264.542);
+  --secondary-foreground: oklch(0 0 0);
+  --muted-foreground: oklch(0.25 0.02 264.364);
+  --accent-foreground: oklch(0 0 0);
+  --destructive: oklch(0.45 0.245 27.325);
+  --border: oklch(0 0 0);
+  --input: oklch(0 0 0);
+  --ring: oklch(0 0 0);
+  --chart-1: oklch(0.45 0.22 41.116);
+  --chart-2: oklch(0.4 0.12 184.704);
+  --chart-3: oklch(0.3 0.07 227.392);
+  --chart-4: oklch(0.5 0.19 84.429);
+  --chart-5: oklch(0.45 0.19 70.08);
+  --sidebar-foreground: oklch(0 0 0);
+  --sidebar-primary: oklch(0.15 0.05 264.665);
+  --sidebar-accent-foreground: oklch(0 0 0);
+  --sidebar-border: oklch(0 0 0);
+  --sidebar-ring: oklch(0 0 0);
+  --neutral-border: #000000;
+
+  --color-tremor-brand: #3730a3;
+  --color-tremor-brand-muted: #4338ca;
+  --color-tremor-brand-subtle: #4338ca;
+  --color-tremor-brand-emphasis: #1e1b4b;
+  --color-tremor-border: #000000;
+  --color-tremor-ring: #000000;
+  --color-tremor-content-subtle: #374151;
+  --color-tremor-content: #1f2937;
+  --color-tremor-content-emphasis: #000000;
+  --color-tremor-content-strong: #000000;
+}
+
+.high-contrast :focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

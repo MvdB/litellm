@@ -269,6 +269,45 @@ describe("SidebarAccountMenu", () => {
     expect(toggle).toBeChecked();
   });
 
+  it("should render the theme switcher with light selected by default", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SidebarAccountMenu onLogout={mockOnLogout} />);
+
+    await openMenu(user);
+
+    expect(screen.getByRole("radio", { name: "Light theme" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "Dark theme" })).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByRole("radio", { name: "High contrast theme" })).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("should persist and broadcast a dark theme selection", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<SidebarAccountMenu onLogout={mockOnLogout} />);
+
+    await openMenu(user);
+
+    await user.click(screen.getByRole("radio", { name: "Dark theme" }));
+
+    const localStorageUtils = vi.mocked(await import("@/utils/localStorageUtils"));
+    expect(localStorageUtils.setLocalStorageItem).toHaveBeenCalledWith("appearanceTheme", "dark");
+    expect(localStorageUtils.emitLocalStorageChange).toHaveBeenCalledWith("appearanceTheme");
+  });
+
+  it("should mark the stored theme as selected", async () => {
+    const user = userEvent.setup();
+    mockGetLocalStorageItemImpl = (key: string): string | null => {
+      if (key === "appearanceTheme") return "high-contrast";
+      return null;
+    };
+
+    renderWithProviders(<SidebarAccountMenu onLogout={mockOnLogout} />);
+
+    await openMenu(user);
+
+    expect(screen.getByRole("radio", { name: "High contrast theme" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "Light theme" })).toHaveAttribute("aria-checked", "false");
+  });
+
   it("should show Account in the trigger for the default placeholder user id", () => {
     mockUseAuthorizedImpl = () => ({
       userId: "default_user_id",

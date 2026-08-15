@@ -14,8 +14,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/cva.config";
-import { ChevronsUpDown, Crown, IdCard, LogOut, Mail, ShieldCheck } from "lucide-react";
+import { ChevronsUpDown, Contrast, Crown, IdCard, LogOut, Mail, Moon, ShieldCheck, Sun } from "lucide-react";
 import React from "react";
+import { useAppearanceTheme } from "@/hooks/useAppearanceTheme";
+import type { AppearanceTheme } from "@/utils/appearanceTheme";
+
+const THEME_OPTIONS: readonly { value: AppearanceTheme; label: string; icon: React.ReactNode }[] = [
+  { value: "light", label: "Light", icon: <Sun className="size-4" /> },
+  { value: "dark", label: "Dark", icon: <Moon className="size-4" /> },
+  { value: "high-contrast", label: "High contrast", icon: <Contrast className="size-4" /> },
+];
 
 const RELEASE_NOTES_URL = "https://docs.litellm.ai/release_notes";
 
@@ -83,6 +91,7 @@ interface SidebarAccountMenuProps {
 const SidebarAccountMenu: React.FC<SidebarAccountMenuProps> = ({ onLogout, collapsed = false }) => {
   const { userId, userEmail, userRoleLabel: userRole, premiumUser, accessToken } = useAuthorized();
   const { data: healthData } = useHealthReadinessDetails(accessToken);
+  const [appearanceTheme, setAppearanceTheme] = useAppearanceTheme();
   const version = healthData?.litellm_version;
   const disableShowPrompts = useDisableShowPrompts();
   const disableBlogPosts = useDisableBlogPosts();
@@ -234,6 +243,30 @@ const SidebarAccountMenu: React.FC<SidebarAccountMenuProps> = ({ onLogout, colla
               />
             </div>
           ))}
+          <div className="flex h-[38px] items-center justify-between gap-3 px-3">
+            <span className="text-[13px] text-foreground">Theme</span>
+            <div role="radiogroup" aria-label="Color theme" className="flex gap-0.5 rounded-md border border-border p-0.5">
+              {THEME_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={appearanceTheme === option.value}
+                  aria-label={`${option.label} theme`}
+                  title={option.label}
+                  onClick={() => setAppearanceTheme(option.value)}
+                  className={cn(
+                    "flex size-7 items-center justify-center rounded transition-colors",
+                    appearanceTheme === option.value
+                      ? "bg-accent text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {option.icon}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         <Separator />

@@ -16,13 +16,31 @@ export const metadata: Metadata = {
   icons: { icon: "/get_favicon" },
 };
 
+/* Runs before first paint so a stored dark / high-contrast choice never flashes light. */
+const themeBootstrapScript = `(function () {
+  try {
+    var theme = localStorage.getItem("appearanceTheme");
+    var root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+      root.style.colorScheme = "dark";
+    } else if (theme === "high-contrast") {
+      root.classList.add("high-contrast");
+    }
+  } catch (e) {}
+})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* eslint-disable-next-line react/no-danger -- static constant, must run inline before first paint */}
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+      </head>
       <body className={inter.className}>
         <NuqsAdapter>
           <ReactQueryProvider>
