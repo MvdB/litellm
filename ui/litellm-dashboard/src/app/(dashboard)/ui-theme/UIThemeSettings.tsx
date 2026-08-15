@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UiLoadingSpinner } from "@/components/ui/ui-loading-spinner";
 import { useTheme } from "@/contexts/ThemeContext";
+import AppearanceThemeSelector from "@/components/shared/AppearanceThemeSelector";
 import { getProxyBaseUrl, getGlobalLitellmHeaderName } from "@/components/networking";
 import NotificationsManager from "@/components/molecules/notifications_manager";
 
@@ -119,9 +120,20 @@ const UIThemeSettings: React.FC<UIThemeSettingsProps> = ({ userID, userRole, acc
       <div className="mb-8">
         <h1 className="mb-2 text-2xl font-bold">UI Theme Customization</h1>
         <p className="text-sm text-muted-foreground">
-          Customize your LiteLLM admin dashboard with a custom logo and favicon.
+          Choose a color theme and customize your LiteLLM admin dashboard with a custom logo and favicon.
         </p>
       </div>
+      <Card className="mb-6">
+        <CardContent className="space-y-3">
+          <div>
+            <h2 className="text-base font-semibold">Appearance</h2>
+            <p className="text-sm text-muted-foreground">
+              Color theme for the dashboard. Saved in this browser only, per device.
+            </p>
+          </div>
+          <AppearanceThemeSelector showLabels />
+        </CardContent>
+      </Card>
       <Card>
         <CardContent className="space-y-6">
           <div>

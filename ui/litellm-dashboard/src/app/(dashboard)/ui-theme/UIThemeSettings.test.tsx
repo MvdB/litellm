@@ -44,6 +44,7 @@ describe("UIThemeSettings", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    window.localStorage.removeItem("appearanceTheme");
   });
 
   it("should render nothing without an access token", () => {
@@ -101,6 +102,25 @@ describe("UIThemeSettings", () => {
       expect(NotificationsManager.fromBackend).toHaveBeenCalledWith("Failed to update theme settings"),
     );
     expect(NotificationsManager.success).not.toHaveBeenCalled();
+  });
+
+  it("should render the appearance selector with light selected by default", () => {
+    render(<UIThemeSettings userID="user-1" userRole="Admin" accessToken="sk-test" />);
+
+    expect(screen.getByRole("radio", { name: "Light theme" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "Dark theme" })).toHaveAttribute("aria-checked", "false");
+    expect(screen.getByRole("radio", { name: "High contrast theme" })).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("should persist a selected appearance theme to localStorage and mark it checked", async () => {
+    const user = userEvent.setup();
+    render(<UIThemeSettings userID="user-1" userRole="Admin" accessToken="sk-test" />);
+
+    await user.click(screen.getByRole("radio", { name: "Dark theme" }));
+
+    expect(window.localStorage.getItem("appearanceTheme")).toBe("dark");
+    expect(screen.getByRole("radio", { name: "Dark theme" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radio", { name: "Light theme" })).toHaveAttribute("aria-checked", "false");
   });
 
   it("should clear both inputs and persist nulls when resetting to default", async () => {
